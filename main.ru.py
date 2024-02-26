@@ -29,9 +29,24 @@ def givePhoto(date: str) -> (str,str):
 # params = {'chat_id':chatID, 'photo':givePhoto('2024-01-24')[0]}
 # response = requests.get(endPoint, params=params).json()
 
+#Функция для проверки даты
+def checkDate(userData: str) -> bool:
+    if len(userData) != 10:
+        return False
+    lst = userData.split('-')
+    if len(lst) != 3:
+        return False
+    if not all([len(lst[0]) == 4, len(lst[1]) == 2, len(lst[2]) == 2]):
+        return False
+    for item  in lst:
+        if not all(map(lambda x: x.isdigit(), item)):
+            return False
+    year, month, day = int(lst[0]), int(lst[1]), int(lst[2])
+    if not all([2000 <= year <= 2024, 1 <= month <= 12, 1 <= day <= 31]):
+        return False
+    return True
 
-
-#Бесконечные ответы (в последствии эхо - бот)
+#Бот с астрономическими фото
 offset = -2
 while True:
     endPoint = f'https://api.telegram.org/bot{token}/getUpdates'
@@ -41,13 +56,18 @@ while True:
         offset = response['result'][0]['update_id']
         chatID = response['result'][0]['message']['chat']['id']
         userText = response['result'][0]['message']['text']
-        photoURL, photoEXP = givePhoto(userText)
-        endPoint = f'https://api.telegram.org/bot{token}/sendPhoto'
-        params = {'chat_id':chatID, 'photo':photoURL}
-        response = requests.get(endPoint, params=params)
-        endPoint = f'https://api.telegram.org/bot{token}/sendMessage'
-        params = {'chat_id': chatID, 'text':photoEXP}
-        response = requests.get(endPoint, params=params)
+        if checkDate(userText):
+            photoURL, photoEXP = givePhoto(userText)
+            endPoint = f'https://api.telegram.org/bot{token}/sendPhoto'
+            params = {'chat_id':chatID, 'photo':photoURL}
+            response = requests.get(endPoint, params=params)
+            endPoint = f'https://api.telegram.org/bot{token}/sendMessage'
+            params = {'chat_id': chatID, 'text':photoEXP}
+            response = requests.get(endPoint, params=params)
+        else:
+            endPoint = f'https://api.telegram.org/bot{token}/sendMessage'
+            params = {'chat_id': chatID, 'text': 'Дата введена в неправильном формате!! Правильный формат: ГГГГ-ММ-ДД'}
+            response = requests.get(endPoint, params=params)
     time.sleep(1)
 
 
