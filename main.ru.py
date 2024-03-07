@@ -5,17 +5,25 @@ import time
 with open('token.txt') as f:
     token = f.read()
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import Message, FSInputFile
+from aiogram.types import Message, FSInputFile, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 bot = Bot(token=token)
 dp = Dispatcher()
 
+key1 = KeyboardButton(text='Да!')
+key2 = KeyboardButton(text='Нет')
+keyboard = ReplyKeyboardMarkup(keyboard=[[key1,key2]])
+
+
+
+
+
 from pathlib import Path,WindowsPath
 import random
 
-#Функция ранщдомно выбирает картинку
+#Функция рандомно выбирает картинку
 def getRandomImg(dir: str) -> WindowsPath:
     dirPath = Path.cwd()/dir
     fileinfo = []
@@ -67,15 +75,25 @@ async def process_ban(message: Message):
     await bot.send_photo(chat_id=message.from_user.id, photo=photo)
     await bot.send_message(chat_id=message.from_user.id, text= textReplace, parse_mode='HTML')
 
-@dp.message(lambda message: message.text == 'пельмень')
+
+def pelmenFiltr(message: Message) -> bool:
+    return message.text =='пельмень'
+
+
+@dp.message(pelmenFiltr)
 async def send_echo(message: Message):
-    await message.answer(text="Ммммм..  Пельмешки..... \nСо сметанкой ....")
+    await message.answer(text="Хочешь пельмени?", reply_markup= keyboard)
+
+
+@dp.message(F.text == 'Да!')
+async def send_echo(message: Message):
+    await message.answer(text="Ммммм..  Пельмешки..... \nСо сметанкой ....", reply_markup= ReplyKeyboardRemove())
 
 # Этот хэндлер будет срабатывать на любые ваши текстовые сообщения, кроме команд "/start" и "/help"
 @dp.message()
 async def send_echo(message: Message):
     print(message.model_dump_json(indent=4, exclude_none=True))
-    # await message.send_copy(chat_id=message.from_user.id)
+    await message.send_copy(chat_id=message.from_user.id)
 
 
 if __name__ == '__main__':
