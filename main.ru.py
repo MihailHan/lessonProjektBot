@@ -2,8 +2,11 @@ import aiogram
 import requests
 import pprint
 import time
-with open('token.txt') as f:
-    token = f.read()
+from environs import Env
+env = Env()
+env.read_env()
+token = env('BOT_TOKEN')
+
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
