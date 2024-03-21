@@ -2,19 +2,19 @@ from aiogram.types import Message
 from aiogram.filters import Command,CommandStart
 from aiogram import Router,F
 from lexicon.lexicon import LEXICON_RU
-from services.card_deck import Game
+from services.words_game import wordGame
 from sqlite3 import Connection
 
 router = Router()
-game = Game()
+game = wordGame()
 
 # Этот хэндлер будет срабатывать на команду "/start"
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, dbConnect: Connection):
-    cursor = dbConnect.cursor()
-    cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
-                   (message.from_user.id, message.from_user.full_name, 0, 0))
-    dbConnect.commit()
+    # cursor = dbConnect.cursor()
+    # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
+    #                (message.from_user.id, message.from_user.full_name, 0, 0))
+    # dbConnect.commit()
     await message.answer(LEXICON_RU['start'])
 
 # Этот хэндлер будет срабатывать на команду "/help"
@@ -23,57 +23,42 @@ async def process_help_command(message: Message):
     await message.answer(LEXICON_RU['help'])
 
 
-@router.message(Command(commands=['shuffle']))
-async def process_shuffle(message: Message):
-    try:
-        await game.shuffle()
-    except:
-        await message.answer(text=LEXICON_RU['card_err'])
+@router.message(Command(commands=["word"]))
+async def process_start_command(message: Message, dbConnect: Connection):
+    # cursor = dbConnect.cursor()
+    # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
+    #                (message.from_user.id, message.from_user.full_name, 0, 0))
+    # dbConnect.commit()
+    await message.answer(text=game.getWord())
+
+
+@router.message(lambda message: len(message.text) == 1)
+async def process_check_symb(message: Message, dbConnect: Connection):
+    answer = game.checkSymb(message.text)
+    if answer:
+        await message.answer(text=answer)
     else:
-        await message.answer(text=LEXICON_RU['start_game'])
+        await message.answer(text=game.stop())
 
 
-@router.message(Command(commands=['card']))
-async def process_card(message: Message, dbConnect: Connection):
-    cursor = dbConnect.cursor()
-    cursor.execute(f'SELECT allgames, wingames FROM Users WHERE tgid = {message.from_user.id}')
-    userInfo = cursor.fetchall()
-    allgames = userInfo[0][0] + 1
-    wingames = userInfo[0][1]
-    try:
-        userUrlPhoto, userValue = await game.getCard()
-        botUrlPhoto, botValue = await game.getCard()
-    except AttributeError:
-        await message.answer(text=LEXICON_RU['no_card'])
-    else:
-        await message.answer(text=LEXICON_RU['user_card'])
-        await message.answer_photo(photo=userUrlPhoto)
-        await message.answer(text=LEXICON_RU['bot_card'])
-        await message.answer_photo(photo=botUrlPhoto)
-        if game.whoWin(userValue,botValue) == 'user':
-            await message.answer(text=LEXICON_RU['win'])
-            wingames += 1
-        elif game.whoWin(userValue,botValue) == 'bot':
-            await message.answer(text=LEXICON_RU['lose'])
-        elif game.whoWin(userValue,botValue) == 'draw':
-            await message.answer(text=LEXICON_RU['draw'])
-        cursor.execute(
-            f'UPDATE Users SET allgames = {allgames}, wingames = {wingames} WHERE tgid = {message.from_user.id}')
-        dbConnect.commit()
+@router.message(lambda message: message.text == game.word)
+async def process_win(message: Message, dbConnect: Connection):
+    game.stop()
+    await message.answer(text=f'Победил {message.from_user.full_name}!')
 
-@router.message(Command(commands=['stat']))
-async def process_statistic(message: Message,  dbConnect: Connection):
-    cursor = dbConnect.cursor()
-    cursor.execute(f'SELECT * FROM Users')
-    usersInfo = cursor.fetchall()
-    place = 1
-    usersInfoSorted = sorted(usersInfo, key=lambda x: x[4]/x[3] if x[3] != 0 else 0, reverse=True)
-    for user in usersInfoSorted:
-        if user[1] == message.from_user.id:
-            myPlace = place
-            if user[3]:
-                myWinPercent = round((user[4] / user[3]) * 100, 2)
-            else:
-                myWinPercent = 0
-            place += 1
-            await message.answer(text=f'Ваш процент побед {myWinPercent}, вы находитесь на {myPlace} месте')
+# @router.message(Command(commands=['stat']))
+# async def process_statistic(message: Message,  dbConnect: Connection):
+#     cursor = dbConnect.cursor()
+#     cursor.execute(f'SELECT * FROM Users')
+#     usersInfo = cursor.fetchall()
+#     place = 1
+#     usersInfoSorted = sorted(usersInfo, key=lambda x: x[4]/x[3] if x[3] != 0 else 0, reverse=True)
+#     for user in usersInfoSorted:
+#         if user[1] == message.from_user.id:
+#             myPlace = place
+#             if user[3]:
+#                 myWinPercent = round((user[4] / user[3]) * 100, 2)
+#             else:
+#                 myWinPercent = 0
+#             place += 1
+#             await message.answer(text=f'Ваш процент побед {myWinPercent}, вы находитесь на {myPlace} месте')
