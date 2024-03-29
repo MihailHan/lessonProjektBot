@@ -1,9 +1,10 @@
-from aiogram.types import Message
+from aiogram.types import Message,ReplyKeyboardRemove
 from aiogram.filters import Command,CommandStart
 from aiogram import Router,F
-from lexicon.lexicon import LEXICON_RU
+from lexicon.lexicon import LEXICON_RU,LEXICON_WORD
 from services.words_game import wordGame
 from sqlite3 import Connection
+from keyboards.keyboards import what_game_kb, get_word_kb
 
 router = Router()
 game = wordGame()
@@ -15,15 +16,26 @@ async def process_start_command(message: Message, dbConnect: Connection):
     # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
     #                (message.from_user.id, message.from_user.full_name, 0, 0))
     # dbConnect.commit()
-    await message.answer(LEXICON_RU['start'])
+    await message.answer(LEXICON_RU['start'], reply_markup=what_game_kb)
 
 # Этот хэндлер будет срабатывать на команду "/help"
-@router.message(Command(commands=['help']))
-async def process_help_command(message: Message):
-    await message.answer(LEXICON_RU['help'])
+# @router.message(Command(commands=['help']))
+# async def process_help_command(message: Message):
+#     await message.answer(LEXICON_RU['help'])
+
+# Этот хэндлер будет срабатывать на игру в карты
+@router.message(F.text == LEXICON_RU['card_button'])
+async def process_card_need(message: Message):
+    await message.answer(LEXICON_RU['card_need'],reply_markup= ReplyKeyboardRemove())
+
+# Этот хэндлер будет срабатывать на игру в виселицу
+@router.message(F.text == LEXICON_RU['hanged_button'])
+async def process_card_need(message: Message):
+    await message.answer(LEXICON_RU['hang_need'],reply_markup= ReplyKeyboardRemove())
+    await message.answer(LEXICON_WORD['ready_to_play'], reply_markup= get_word_kb)
 
 
-@router.message(Command(commands=["word"]))
+@router.message(F.text == LEXICON_WORD['get_word'])
 async def process_start_command(message: Message, dbConnect: Connection):
     # cursor = dbConnect.cursor()
     # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',

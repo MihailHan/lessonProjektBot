@@ -1,12 +1,13 @@
 from aiogram import Bot
 from aiogram import types
-from lexicon.lexicon import LEXICON_RU, LEXICON_CMD
+from lexicon.lexicon import LEXICON_RU, LEXICON_CMD, LEXICON_WORD
 
-yes_key = types.KeyboardButton(text=LEXICON_RU['yes_button'])
-no_key = types.KeyboardButton(text=LEXICON_RU['no_button'])
+card_but = types.KeyboardButton(text=LEXICON_RU['card_button'])
+hang_but = types.KeyboardButton(text=LEXICON_RU['hanged_button'])
+what_game_kb = types.ReplyKeyboardMarkup(keyboard=[[card_but,hang_but]])
 
-yes_no_kb = types.ReplyKeyboardMarkup(keyboard=[[yes_key,no_key]])
-
+get_word_but = types.KeyboardButton(text=LEXICON_WORD['get_word'])
+get_word_kb = types.ReplyKeyboardMarkup(keyboard= [[get_word_but]])
 
 
 async def set_main_menu(bot: Bot):
