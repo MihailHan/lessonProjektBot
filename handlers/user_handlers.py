@@ -23,16 +23,23 @@ async def process_start_command(message: Message, dbConnect: Connection):
 # async def process_help_command(message: Message):
 #     await message.answer(LEXICON_RU['help'])
 
-# Этот хэндлер будет срабатывать на игру в карты
+# Этот хэндлер будет срабатывать на кнопку играть в карты
 @router.message(F.text == LEXICON_RU['card_button'])
 async def process_card_need(message: Message):
     await message.answer(LEXICON_RU['card_need'],reply_markup= ReplyKeyboardRemove())
 
-# Этот хэндлер будет срабатывать на игру в виселицу
+# Этот хэндлер будет срабатывать на кнопку играть в виселицу
 @router.message(F.text == LEXICON_RU['hanged_button'])
 async def process_card_need(message: Message):
     await message.answer(LEXICON_RU['hang_need'],reply_markup= ReplyKeyboardRemove())
     await message.answer(LEXICON_WORD['ready_to_play'], reply_markup= get_word_kb)
+
+# Этот хэндлер будет срабатывать на кнопу отмены
+@router.message(F.text == LEXICON_RU['cancel'])
+async def process_cancel(message: Message):
+    await message.answer(LEXICON_RU['cancel_start'],reply_markup=what_game_kb)
+
+
 
 
 @router.message(F.text == LEXICON_WORD['get_word'])
@@ -41,6 +48,7 @@ async def process_start_command(message: Message, dbConnect: Connection):
     # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
     #                (message.from_user.id, message.from_user.full_name, 0, 0))
     # dbConnect.commit()
+    await message.answer(text=LEXICON_WORD['you_word'],reply_markup= ReplyKeyboardRemove())
     if game.status:
         await message.answer(text='Игра уже запущена! Отгадывайте слово')
         return
@@ -55,7 +63,9 @@ async def process_start_command(message: Message, dbConnect: Connection):
 async def process_check_symb(message: Message, dbConnect: Connection):
     answer = game.checkSymb(message.text)
     if answer == 'win':
-        await message.answer(text=f'Победил {message.from_user.full_name}!')
+        game.stop()
+        await message.answer(text=f'Победил {message.from_user.full_name}!🎉🎉')
+        await message.answer(text=LEXICON_RU['again_answ'],reply_markup= get_word_kb)
     elif answer:
         await message.answer(text=answer)
         await message.answer(text=f'Использованные символы: {game.getUsedSymbols()}')
@@ -66,7 +76,8 @@ async def process_check_symb(message: Message, dbConnect: Connection):
 @router.message(lambda message: message.text == game.word)
 async def process_win(message: Message, dbConnect: Connection):
     game.stop()
-    await message.answer(text=f'Победил {message.from_user.full_name}!')
+    await message.answer(text=f'Победил {message.from_user.full_name}!🎉🎉')
+    await message.answer(text=LEXICON_RU['again_answ'], reply_markup=get_word_kb)
 
 # @router.message(Command(commands=['stat']))
 # async def process_statistic(message: Message,  dbConnect: Connection):
