@@ -12,10 +12,6 @@ game = wordGame()
 # Этот хэндлер будет срабатывать на команду "/start"
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, dbConnect: Connection):
-    # cursor = dbConnect.cursor()
-    # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
-    #                (message.from_user.id, message.from_user.full_name, 0, 0))
-    # dbConnect.commit()
     await message.answer(LEXICON_RU['start'], reply_markup=what_game_kb)
 
 # Этот хэндлер будет срабатывать на команду "/help"
@@ -23,10 +19,7 @@ async def process_start_command(message: Message, dbConnect: Connection):
 # async def process_help_command(message: Message):
 #     await message.answer(LEXICON_RU['help'])
 
-# Этот хэндлер будет срабатывать на кнопку играть в карты
-@router.message(F.text == LEXICON_RU['card_button'])
-async def process_card_need(message: Message):
-    await message.answer(LEXICON_RU['card_need'],reply_markup= ReplyKeyboardRemove())
+
 
 # Этот хэндлер будет срабатывать на кнопку играть в виселицу
 @router.message(F.text == LEXICON_RU['hanged_button'])

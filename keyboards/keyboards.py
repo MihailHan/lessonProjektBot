@@ -2,9 +2,9 @@ from aiogram import Bot
 from aiogram import types
 from lexicon.lexicon import LEXICON_RU, LEXICON_CMD, LEXICON_WORD
 
-card_but = types.KeyboardButton(text=LEXICON_RU['card_button'])
+# card_but = types.KeyboardButton(text=LEXICON_RU['card_button'])
 hang_but = types.KeyboardButton(text=LEXICON_RU['hanged_button'])
-what_game_kb = types.ReplyKeyboardMarkup(keyboard=[[card_but,hang_but]])
+what_game_kb = types.ReplyKeyboardMarkup(keyboard=[[hang_but]])
 
 get_word_but = types.KeyboardButton(text=LEXICON_WORD['get_word'])
 cancel_but = types.KeyboardButton(text=LEXICON_RU['cancel'])

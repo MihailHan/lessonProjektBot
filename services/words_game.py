@@ -22,7 +22,7 @@ class wordGame:
                 break
             time.sleep(1)
         self.word = tr.lower()
-        # print(self.word)
+        print(self.word)
         self.answer = list('_' * len(self.word))
         self.status = True
         self.usedSymbols = set()
