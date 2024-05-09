@@ -10,6 +10,8 @@ get_word_but = types.KeyboardButton(text=LEXICON_WORD['get_word'])
 cancel_but = types.KeyboardButton(text=LEXICON_RU['cancel'])
 get_word_kb = types.ReplyKeyboardMarkup(keyboard= [[get_word_but,cancel_but]])
 
+stop_game_but = types.KeyboardButton(text=LEXICON_RU['stop_game'])
+stop_kb = types.ReplyKeyboardMarkup(keyboard= [[stop_game_but]])
 
 async def set_main_menu(bot: Bot):
     main_menu_commands = [

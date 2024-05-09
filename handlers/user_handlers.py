@@ -4,7 +4,7 @@ from aiogram import Router,F
 from lexicon.lexicon import LEXICON_RU,LEXICON_WORD
 from services.words_game import wordGame
 from sqlite3 import Connection
-from keyboards.keyboards import what_game_kb, get_word_kb
+from keyboards.keyboards import what_game_kb, get_word_kb, stop_kb
 
 router = Router()
 game = wordGame()
@@ -14,16 +14,14 @@ game = wordGame()
 async def process_start_command(message: Message, dbConnect: Connection):
     await message.answer(LEXICON_RU['start'], reply_markup=what_game_kb)
 
-# Этот хэндлер будет срабатывать на команду "/help"
-# @router.message(Command(commands=['help']))
-# async def process_help_command(message: Message):
-#     await message.answer(LEXICON_RU['help'])
-
-
+# Этот хэндлер будет срабатывать на команду "/creator"
+@router.message(Command(commands=['creator']))
+async def process_help_command(message: Message):
+    await message.answer(LEXICON_RU['creator'])
 
 # Этот хэндлер будет срабатывать на кнопку играть в виселицу
 @router.message(F.text == LEXICON_RU['hanged_button'])
-async def process_card_need(message: Message):
+async def process_word_need(message: Message):
     await message.answer(LEXICON_RU['hang_need'],reply_markup= ReplyKeyboardRemove())
     await message.answer(LEXICON_WORD['ready_to_play'], reply_markup= get_word_kb)
 
@@ -32,16 +30,10 @@ async def process_card_need(message: Message):
 async def process_cancel(message: Message):
     await message.answer(LEXICON_RU['cancel_start'],reply_markup=what_game_kb)
 
-
-
-
+# Этот хэндлер срабатывает для получения слова
 @router.message(F.text == LEXICON_WORD['get_word'])
-async def process_start_command(message: Message, dbConnect: Connection):
-    # cursor = dbConnect.cursor()
-    # cursor.execute('INSERT OR IGNORE INTO Users (tgid, username, allgames, wingames) VALUES (?, ?, ?, ?)',
-    #                (message.from_user.id, message.from_user.full_name, 0, 0))
-    # dbConnect.commit()
-    await message.answer(text=LEXICON_WORD['you_word'],reply_markup= ReplyKeyboardRemove())
+async def process_game_command(message: Message):
+    await message.answer(text=LEXICON_WORD['you_word'], reply_markup=ReplyKeyboardRemove())
     if game.status:
         await message.answer(text='Игра уже запущена! Отгадывайте слово')
         return
@@ -49,11 +41,11 @@ async def process_start_command(message: Message, dbConnect: Connection):
         msg = await game.getWord()
     except:
         msg = 'У меня нет слов (('
-    await message.answer(text=msg)
+    await message.answer(text=msg,reply_markup=stop_kb)
 
-
+# Этот хэндлер срабатывает при угадывании слова по буквам
 @router.message(lambda message: len(message.text) == 1 and game.status)
-async def process_check_symb(message: Message, dbConnect: Connection):
+async def process_check_symb(message: Message):
     answer = game.checkSymb(message.text)
     if answer == 'win':
         game.stop()
@@ -63,28 +55,22 @@ async def process_check_symb(message: Message, dbConnect: Connection):
         await message.answer(text=answer)
         await message.answer(text=f'Использованные символы: {game.getUsedSymbols()}')
     else:
+        game.stop()
+        await message.answer(text='Словом было:')
         await message.answer(text=game.stop())
+        await message.answer(text='Не расстраивайтесь, сыграем еще раз?', reply_markup=get_word_kb)
 
-
+# Этот хэндлер срабатывает при угадывании слова целиком
 @router.message(lambda message: message.text == game.word)
-async def process_win(message: Message, dbConnect: Connection):
-    game.stop()
-    await message.answer(text=f'Победил {message.from_user.full_name}!🎉🎉')
-    await message.answer(text=LEXICON_RU['again_answ'], reply_markup=get_word_kb)
+async def process_win(message: Message):
+    if game.status:
+        game.stop()
+        await message.answer(text=f'Победил {message.from_user.full_name}!🎉🎉')
+        await message.answer(text=LEXICON_RU['again_answ'], reply_markup=get_word_kb)
 
-# @router.message(Command(commands=['stat']))
-# async def process_statistic(message: Message,  dbConnect: Connection):
-#     cursor = dbConnect.cursor()
-#     cursor.execute(f'SELECT * FROM Users')
-#     usersInfo = cursor.fetchall()
-#     place = 1
-#     usersInfoSorted = sorted(usersInfo, key=lambda x: x[4]/x[3] if x[3] != 0 else 0, reverse=True)
-#     for user in usersInfoSorted:
-#         if user[1] == message.from_user.id:
-#             myPlace = place
-#             if user[3]:
-#                 myWinPercent = round((user[4] / user[3]) * 100, 2)
-#             else:
-#                 myWinPercent = 0
-#             place += 1
-#             await message.answer(text=f'Ваш процент побед {myWinPercent}, вы находитесь на {myPlace} месте')
+# Этот хэндлер срабатывает при остановке игры
+@router.message(F.text == LEXICON_RU['stop_game'])
+async def process_stop_game(message: Message):
+    game.stop()
+    await message.answer(text='Игра остановлена⛔')
+    await message.answer(text='Но всегда можно начать новую!', reply_markup=get_word_kb)
